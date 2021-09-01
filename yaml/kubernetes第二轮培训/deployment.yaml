@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 1  #副本数量
+  template:
+    metadata:
+      name: nginx
+      labels:
+        app: nginx  #//
+    spec:
+      volumes:
+        - name: pv-test
+          persistentVolumeClaim:
+            claimName: pvc-test
+      containers:
+        - name: nginx
+          image: nginx:1.19
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests: #调度时，最小资源
+              cpu: 100m
+              memory: 100Mi
+            limits: #运行时
+              cpu: 100m
+              memory: 200Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+              httpHeaders:
+                - name: custion-header
+                  value: livenessprobe
+            initialDelaySeconds: 3
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 1
+          startupProbe:
+            httpGet:
+              port: 80
+              path: /healthz
+            failureThreshold: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            exec:
+              command:
+                - cat
+                - /tmp/healthy
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - mountPath: /nfs
+              name: pvc-test
+
+
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: nginx

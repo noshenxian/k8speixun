@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  labels:
+    app: nginx-ingress
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: nginx.ucap.com.cn
+      http:
+        paths:
+          - path: /nginx
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx
+                port:
+                  number: 80
